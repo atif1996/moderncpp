@@ -1,4 +1,4 @@
-#include <riot/core/dummy.hpp>
+#include "dummy.hpp"
 #include <string>
 
 std::string dummy() {
