@@ -14,10 +14,6 @@ jobs:
             cmake-version: '3.17.x'
       - name: Checkout
         uses: actions/checkout@v2.0.0
-#      - name: Build
-#       run: |
-#         cmake -d build -DCMAKE_BUILD_TYPE
-#         cd build
       - name: Build c++ project
         uses: nicledomaS/cmake_build_action@v1.3
         with:
