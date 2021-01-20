@@ -8,8 +8,6 @@ jobs:
     steps:
       - name: run version
         run: |
-          apt-get update && apt-get upgrade -y
-          apt-get install build-essential python3-pip -y
           pip3 install conan
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1.6
