@@ -6,23 +6,22 @@ jobs:
   ubuntu:
     runs-on: ubuntu-20.04
     steps:
-      - name: run version
-        run: |
-          pip3 install conan
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1.6
         with:
             cmake-version: '3.17.x'
       - name: Checkout
         uses: actions/checkout@v2.0.0
+      - name: Install conan
+        run: |
+          pip3 install conan
 #     - name: Build
 #       run: |
 #         cmake -d build -DCMAKE_BUILD_TYPE
 #         cd build
-
       - name: Build c++ project
         uses: nicledomaS/cmake_build_action@v1.3
         with:
           run_tests: ON
           unit_test_build: -Dtest=ON
-          cmake_args: -DCMAKE_BUILD_TYPE=Release;
+          cmake_args: -DCMAKE_BUILD_TYPE=Release
