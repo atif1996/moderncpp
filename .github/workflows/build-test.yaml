@@ -6,16 +6,15 @@ jobs:
   ubuntu:
     runs-on: ubuntu-20.04
     steps:
+      - name: Get Conan
+        uses: turtlebrowser/get-conan@v1.0
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1.6
         with:
             cmake-version: '3.17.x'
       - name: Checkout
         uses: actions/checkout@v2.0.0
-      - name: Install conan
-        run: |
-          pip3 install conan
-#     - name: Build
+#      - name: Build
 #       run: |
 #         cmake -d build -DCMAKE_BUILD_TYPE
 #         cd build
