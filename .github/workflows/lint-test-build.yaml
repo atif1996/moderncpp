@@ -2,13 +2,16 @@ name: Test, Build
 
 on: [push]
 
-env:
-  GOPRIVATE: github.com/cfacorp
-  REPOSITORY: riot/goauth
 jobs:
   ubuntu-build:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.6
+        with:
+          cmake-version: '3.17.x'
+      - name: Use cmake
+        run: cmake --version
       - name: Conan Request
         uses: Minimonium/conan-request-action@0.0.7
       - name: Build c++ project
