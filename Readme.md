@@ -1,3 +1,5 @@
+![Build&Test](https://github.com/atif1996/moderncpp/workflows/Build&Test/badge.svg)
+
 Modern C++17/20 Cmake template
 ==============================
 
