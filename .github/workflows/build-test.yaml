@@ -5,9 +5,12 @@ on: [push]
 jobs:
   ubuntu:
     runs-on: ubuntu-20.04
+    using: docker
     steps:
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.0
+      - name: Setup Conan
+        run: |
+          pip install wheel setuptools
+          pip install conan --upgrade
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1.6
         with:
@@ -20,3 +23,9 @@ jobs:
           run_tests: ON
           unit_test_build: -Dtest=ON
           cmake_args: -DCMAKE_BUILD_TYPE=Release
+      - name: echo
+        run: |
+          pwd
+          ls
+      - name: Lint
+        run: cppcheck --project=compile_commands.json -ifoo

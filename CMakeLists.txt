@@ -7,6 +7,11 @@ include(cmake/conan.cmake)
 conan_cmake_run(CONANFILE conanfile.txt  # or relative build/conanfile.txt
         BASIC_SETUP CMAKE_TARGETS)
 
+if (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
+	set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # Enables cppcheck and clang-tidy
+endif()
+
+
 include(CTest)
 enable_testing()
 include(Catch)
