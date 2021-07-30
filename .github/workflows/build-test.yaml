@@ -14,6 +14,9 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1.9
         with:
             cmake-version: '3.21.x'
+      - name: Install cppcheck
+        run: |
+          apr-get update && apt-get install cppcheck -y
       - name: Checkout
         uses: actions/checkout@v2.0.0
       - name: Build c++ project
