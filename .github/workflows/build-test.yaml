@@ -13,7 +13,7 @@ jobs:
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1.9
         with:
-            cmake-version: '3.21.x'
+            cmake-version: '3.19.x'
       - name: Install cppcheck
         run: |
           sudo apt-get update && sudo apt-get install cppcheck -y
