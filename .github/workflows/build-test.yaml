@@ -11,13 +11,13 @@ jobs:
           pip install wheel setuptools
           pip install conan --upgrade
       - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.6
+        uses: jwlawson/actions-setup-cmake@v1.9
         with:
             cmake-version: '3.21.x'
       - name: Checkout
         uses: actions/checkout@v2.0.0
       - name: Build c++ project
-        uses: nicledomaS/cmake_build_action@v1.3
+        uses: nicledomaS/cmake_build_action@v1.4
         with:
           run_tests: ON
           unit_test_build: -Dtest=ON
