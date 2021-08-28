@@ -30,3 +30,10 @@ can also be in a cmake-build-* directory inside of the source.  You kick off a b
   make test         # test everything
   
 ```
+
+Prerequisites
+-------------
+
+On ubuntu, you need to install python pip, cmake and conan
+  sudo apt install python-pip3 cmake 
+  pip3 install conan
