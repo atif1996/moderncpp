@@ -1,0 +1,46 @@
+name: Template check
+
+# Proves the template still turns into a working project: rename it as a new repository would be, then
+# build, test, package and lint the result. The rename removes this workflow from generated projects.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  rename-and-build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Conan and clang-format
+        run: |
+          pip install "conan>=2,<3" clang-format==22.1.8
+          conan profile detect --force
+      - name: Rename as a repository named sample-project would be
+        run: python3 scripts/rename.py sample-project --repo example/sample-project
+      - name: No placeholder or template-only file is left
+        run: |
+          if grep -rIil --exclude-dir=.git packagename .; then
+            echo "the placeholder name is still present in the files above"; exit 1
+          fi
+          test ! -e scripts/rename.py
+          test ! -e .github/template
+          test ! -e .github/workflows/template-first-use.yaml
+          test -f README.md && grep -q "example/sample-project" README.md
+      - name: The rename leaves the remaining workflow untouched
+        # A repository's own token cannot push changes to workflow files, only delete them.
+        run: git diff --exit-code -- .github/workflows/build-test.yaml
+      - name: Build and test
+        run: conan build . -s compiler.cppstd=20 -o "&:shared=True" -c user.project:werror=True --build=missing
+      - name: Package and build the consumer project
+        run: conan create . -s compiler.cppstd=20 --build=missing
+      - name: Formatting still passes
+        run: |
+          git add -A
+          git ls-files '*.cpp' '*.hpp' | xargs clang-format --dry-run --Werror

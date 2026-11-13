@@ -1,33 +1,73 @@
 name: Build&Test
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
 
+# Nothing in this file names the package, so renaming the project leaves it unchanged.
 jobs:
-  ubuntu:
-    runs-on: ubuntu-20.04
+  build:
+    name: ${{ matrix.os }} (${{ matrix.linkage }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+        linkage: [static, shared]
+    defaults:
+      run:
+        shell: bash
+    env:
+      SHARED: ${{ matrix.linkage == 'shared' && 'True' || 'False' }}
     steps:
-      - name: Setup Conan
-        run: |
-          pip install wheel setuptools
-          pip install conan --upgrade
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.9
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-            cmake-version: '3.19.x'
-      - name: Install cppcheck
+          python-version: "3.12"
+      - name: Install Conan
         run: |
-          sudo apt-get update && sudo apt-get install cppcheck -y
-      - name: Checkout
-        uses: actions/checkout@v2.0.0
-      - name: Build c++ project
-        uses: nicledomaS/cmake_build_action@v1.4
+          pip install "conan>=2,<3"
+          conan profile detect --force
+      - name: Build and test
+        run: conan build . -s compiler.cppstd=20 -o "&:shared=$SHARED" -c user.project:werror=True --build=missing
+      - name: Package and build the consumer project
+        run: conan create . -s compiler.cppstd=20 -o "&:shared=$SHARED" --build=missing
+
+  sanitizers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          run_tests: ON
-          unit_test_build: -Dtest=ON
-          cmake_args: -DCMAKE_BUILD_TYPE=Release
-      - name: echo
+          python-version: "3.12"
+      - name: Install Conan
         run: |
-          pwd
-          ls
-      - name: Lint
-        run: cppcheck --project=compile_commands.json -ifoo
+          pip install "conan>=2,<3"
+          conan profile detect --force
+      - name: Build and test with AddressSanitizer and UndefinedBehaviorSanitizer
+        run: >
+          conan build . -s compiler.cppstd=20 --build=missing
+          -c tools.build:cxxflags='["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-fno-omit-frame-pointer", "-g"]'
+          -c tools.build:exelinkflags='["-fsanitize=address,undefined"]'
+          -c tools.build:sharedlinkflags='["-fsanitize=address,undefined"]'
+
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Conan, clang-format and clang-tidy
+        run: |
+          pip install "conan>=2,<3" clang-format==22.1.8
+          conan profile detect --force
+          sudo apt-get update && sudo apt-get install -y clang-tidy
+      - name: clang-format
+        run: git ls-files '*.cpp' '*.hpp' | xargs clang-format --dry-run --Werror
+      - name: clang-tidy
+        run: conan build . -s compiler.cppstd=20 -c user.project:clang_tidy=True --build=missing
