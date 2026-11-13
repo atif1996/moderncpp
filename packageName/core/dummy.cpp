@@ -1,6 +1,7 @@
-#include "dummy.hpp"
-#include <string>
+#include <packageName/core/dummy.hpp>
 
-std::string dummy() {
-    return "hello hello hello";
-}
+namespace packageName {
+
+std::string dummy() { return "hello hello hello"; }
+
+}  // namespace packageName
