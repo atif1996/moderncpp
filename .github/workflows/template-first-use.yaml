@@ -17,7 +17,7 @@ jobs:
       REPOSITORY: ${{ github.repository }}
       NAME: ${{ github.event.repository.name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Rename the package after the repository
         run: python3 scripts/rename.py "$NAME" --repo "$REPOSITORY"
       - name: Commit and push
