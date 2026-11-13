@@ -2,6 +2,8 @@
 
 namespace packageName {
 
-std::string dummy() { return "hello hello hello"; }
+std::string dummy() {
+    return "hello hello hello";
+}
 
 }  // namespace packageName

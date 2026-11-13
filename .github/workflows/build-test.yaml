@@ -4,7 +4,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
 
+# Nothing in this file names the package, so renaming the project leaves it unchanged.
 jobs:
   build:
     name: ${{ matrix.os }} (${{ matrix.linkage }})
@@ -29,9 +33,27 @@ jobs:
           pip install "conan>=2,<3"
           conan profile detect --force
       - name: Build and test
-        run: conan build . -s compiler.cppstd=20 -o "&:shared=$SHARED" -c user.packagename:werror=True --build=missing
+        run: conan build . -s compiler.cppstd=20 -o "&:shared=$SHARED" -c user.project:werror=True --build=missing
       - name: Package and build the consumer project
-        run: conan create . -s compiler.cppstd=20 -o "packagename/*:shared=$SHARED" --build=missing
+        run: conan create . -s compiler.cppstd=20 -o "&:shared=$SHARED" --build=missing
+
+  sanitizers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Conan
+        run: |
+          pip install "conan>=2,<3"
+          conan profile detect --force
+      - name: Build and test with AddressSanitizer and UndefinedBehaviorSanitizer
+        run: >
+          conan build . -s compiler.cppstd=20 --build=missing
+          -c tools.build:cxxflags='["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-fno-omit-frame-pointer", "-g"]'
+          -c tools.build:exelinkflags='["-fsanitize=address,undefined"]'
+          -c tools.build:sharedlinkflags='["-fsanitize=address,undefined"]'
 
   lint:
     runs-on: ubuntu-24.04
@@ -40,13 +62,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install Conan and clang-tidy
+      - name: Install Conan, clang-format and clang-tidy
         run: |
-          pip install "conan>=2,<3"
+          pip install "conan>=2,<3" clang-format==22.1.8
           conan profile detect --force
           sudo apt-get update && sudo apt-get install -y clang-tidy
+      - name: clang-format
+        run: git ls-files '*.cpp' '*.hpp' | xargs clang-format --dry-run --Werror
       - name: clang-tidy
-        run: |
-          conan install . -s compiler.cppstd=20 --build=missing
-          cmake --preset conan-release -DpackageName_CLANG_TIDY=ON
-          cmake --build --preset conan-release
+        run: conan build . -s compiler.cppstd=20 -c user.project:clang_tidy=True --build=missing

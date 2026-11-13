@@ -9,6 +9,7 @@ include(GNUInstallDirs)
 include(GenerateExportHeader)
 include(CMakePackageConfigHelpers)
 include(cmake/Warnings.cmake)
+include(cmake/AddLibrary.cmake)
 
 option(packageName_BUILD_TESTS "Build the unit and integration tests" ${PROJECT_IS_TOP_LEVEL})
 option(packageName_BUILD_APPS "Build the applications under apps/" ${PROJECT_IS_TOP_LEVEL})

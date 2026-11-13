@@ -1,0 +1,8 @@
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 110
+AccessModifierOffset: -4
+# Keep include blocks as written: regrouping sorts the project's own headers among the others by name, so
+# the order would change when the package is renamed.
+IncludeBlocks: Preserve
+AllowShortFunctionsOnASingleLine: Inline

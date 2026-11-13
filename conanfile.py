@@ -14,12 +14,15 @@ class PackageNameConan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
-    exports_sources = "CMakeLists.txt", "cmake/*", "packageName/*", "apps/*", "tests/*", "!tests/consumer/*"
+    exports_sources = (
+        "CMakeLists.txt", ".clang-tidy", "cmake/*", "packageName/*", "apps/*", "tests/*", "!tests/consumer/*")
     test_package_folder = "tests/consumer"
+    # One entry per directory under packageName/ that calls packageName_add_library.
+    _libraries = ("core",)
 
     def set_version(self):
         cmakelists = load(self, os.path.join(self.recipe_folder, "CMakeLists.txt"))
-        self.version = re.search(r"project\(packageName\s+VERSION\s+(\S+)", cmakelists).group(1)
+        self.version = re.search(r"project\(\s*\w+\s+VERSION\s+(\S+)", cmakelists).group(1)
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -45,8 +48,12 @@ class PackageNameConan(ConanFile):
         CMakeDeps(self).generate()
         tc = CMakeToolchain(self)
         tc.cache_variables["packageName_BUILD_TESTS"] = not self._skip_tests()
+        # user.project:werror and user.project:clang_tidy are this project's own switches, named without the
+        # package so the CI workflow needs no edit when the package is renamed.
         tc.cache_variables["packageName_WARNINGS_AS_ERRORS"] = self.conf.get(
-            "user.packagename:werror", default=False, check_type=bool)
+            "user.project:werror", default=False, check_type=bool)
+        tc.cache_variables["packageName_CLANG_TIDY"] = self.conf.get(
+            "user.project:clang_tidy", default=False, check_type=bool)
         tc.generate()
 
     def build(self):
@@ -63,8 +70,9 @@ class PackageNameConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "packageName")
-        core = self.cpp_info.components["core"]
-        core.set_property("cmake_target_name", "packageName::core")
-        core.libs = ["packageName_core"]
-        if not self.options.shared:
-            core.defines = ["PACKAGENAME_CORE_STATIC_DEFINE"]
+        for library in self._libraries:
+            component = self.cpp_info.components[library]
+            component.set_property("cmake_target_name", f"packageName::{library}")
+            component.libs = [f"packageName_{library}"]
+            if not self.options.shared:
+                component.defines = [f"PACKAGENAME_{library.upper()}_STATIC_DEFINE"]
